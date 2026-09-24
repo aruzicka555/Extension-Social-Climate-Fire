@@ -129,6 +129,23 @@ namespace Landis.Extension.SocialClimateFire
             this.BurningSitesThreshold = PlugIn.Parameters.BurningSitesThreshold;
         }
 
+        private double CalculateFineFuelsFromList(ActiveSite site, List<ISpecies> fineFuelsSpeciesList)
+        {
+            double fineFuels = 0;
+            foreach (ISpeciesCohorts speciesCohorts in SiteVars.Cohorts[site])
+            {
+                foreach (ICohort cohort in speciesCohorts)
+                {
+                    if (fineFuelsSpeciesList.Contains(cohort.Species))
+                    {
+                        fineFuels += cohort.Data.Biomass;
+                    }
+                }
+            }
+
+            return fineFuels;
+        }
+
         //---------------------------------------------------------------------
         public static FireEvent Initiate(ActiveSite initiationSite, int timestep, int day, IgnitionType ignitionType)
         {
@@ -312,9 +329,11 @@ namespace Landis.Extension.SocialClimateFire
         private void CalculateDNBR(ActiveSite site)
         {
             double fineFuelPercent = 0.0;
+            double fineFuelPercentB = 0.0;
             try
             {
-                fineFuelPercent = Math.Min(SiteVars.FineFuels[site] / PlugIn.Parameters.MaxFineFuels, 1.0);
+                fineFuelPercent = Math.Min(CalculateFineFuelsFromList(site, PlugIn.Parameters.FineFuelsSpeciesAList) / PlugIn.Parameters.MaxFineFuels, 1.0);
+                fineFuelPercentB = Math.Min(CalculateFineFuelsFromList(site, PlugIn.Parameters.FineFuelsSpeciesBList) / PlugIn.Parameters.MaxFineFuels_b, 1.0);
             }
             catch
             {
@@ -373,7 +392,8 @@ namespace Landis.Extension.SocialClimateFire
                 + (siteEffectiveWindSpeed * Beta_Windspeed)
                 + (WaterDeficit * Beta_Water_Deficit)
                 + (ladderFuelBiomass * Beta_LadderFuels)
-                + (fineFuelPercent * Beta_Fuel)), .0005), -1.0);
+                + (fineFuelPercent * Beta_Fuel)
+                + (fineFuelPercentB * Beta_Fuel)), .0005), -1.0);
 
             siteMortality = Math.Max(siteMortality, 0.0);  // In the long-run, this shouldn't be necessary.  But useful for testing.
 
@@ -384,6 +404,7 @@ namespace Landis.Extension.SocialClimateFire
             this.MeanClay += Clay;
             this.MeanLadderFuels += ladderFuelBiomass;
             this.MeanFineFuels += fineFuelPercent;
+            this.MeanFineFuels += fineFuelPercentB;
             this.SiteMortality =(int)siteMortality;
 
             int standardSeverityIndex = Math.Max((int) siteMortality / 100, 1);
@@ -495,14 +516,22 @@ namespace Landis.Extension.SocialClimateFire
             SiteVars.Disturbed[site] = true;  // set to true, regardless of whether fire burns; this prevents endless checking of the same site.
 
             double fineFuelPercent = 0.0;
+            double fineFuelPercentB = 0.0;
             double fineFuelPercent_harvest = 1.0;
+            double fineFuelPercent_harvestB = 1.0;
             try
             {
-                fineFuelPercent = Math.Min(SiteVars.FineFuels[site] / PlugIn.Parameters.MaxFineFuels, 1.0);
+                fineFuelPercent = Math.Min(CalculateFineFuelsFromList(site, PlugIn.Parameters.FineFuelsSpeciesAList) / PlugIn.Parameters.MaxFineFuels, 1.0);
                 if (SiteVars.HarvestTime != null && SiteVars.HarvestTime[site] > PlugIn.ModelCore.CurrentTime)
                     fineFuelPercent_harvest = (System.Math.Min(1.0, (double)(PlugIn.ModelCore.CurrentTime - SiteVars.HarvestTime[site]) * 0.1));
 
                 fineFuelPercent = Math.Min(fineFuelPercent, fineFuelPercent_harvest);
+
+                fineFuelPercentB = Math.Min(CalculateFineFuelsFromList(site, PlugIn.Parameters.FineFuelsSpeciesBList) / PlugIn.Parameters.MaxFineFuels_b, 1.0);
+                if (SiteVars.HarvestTime != null && SiteVars.HarvestTime[site] > PlugIn.ModelCore.CurrentTime)
+                    fineFuelPercent_harvestB = (System.Math.Min(1.0, (double)(PlugIn.ModelCore.CurrentTime - SiteVars.HarvestTime[site]) * 0.1));
+
+                fineFuelPercentB = Math.Min(fineFuelPercentB, fineFuelPercent_harvestB);
             }
             catch
             {
@@ -568,8 +597,11 @@ namespace Landis.Extension.SocialClimateFire
             double spreadB1 = PlugIn.Parameters.SpreadProbabilityB1;
             double spreadB2 = PlugIn.Parameters.SpreadProbabilityB2;
             double spreadB3 = PlugIn.Parameters.SpreadProbabilityB3;
+            double spreadB4 = PlugIn.Parameters.SpreadProbabilityB4;
 
-            double Pspread = Math.Pow(Math.E, -1.0 * (spreadB0 + (spreadB1 * fireWeatherIndex) + (spreadB2 * fineFuelPercent) + (spreadB3 * effectiveWindSpeed)));
+
+            // THIS IS THE EQUATION!
+            double Pspread = Math.Pow(Math.E, -1.0 * (spreadB0 + (spreadB1 * fireWeatherIndex) + (spreadB2 * fineFuelPercent) + (spreadB4 * fineFuelPercentB) + (spreadB3 * effectiveWindSpeed)));
             Pspread = 1.0 / (1.0 + Pspread);
             
             //The distance weight accounts for the longer centroid distance between diagonal spread 
