@@ -314,10 +314,6 @@ namespace Landis.Extension.SocialClimateFire
             ReadVar(maxFF);
             parameters.MaxFineFuels = maxFF.Value;
 
-            InputVar<double> maxFFb = new InputVar<double>("MaximumFineFuels_b");
-            ReadVar(maxFFb);
-            parameters.MaxFineFuels_b = maxFFb.Value;
-
             InputVar<double> maxRxWS = new InputVar<double>("MaximumRxWindSpeed");
             ReadVar(maxRxWS);
             parameters.RxMaxWindSpeed = maxRxWS.Value;
@@ -406,10 +402,6 @@ namespace Landis.Extension.SocialClimateFire
             ReadVar(sp3);
             parameters.SpreadProbabilityB3 = sp3.Value;
 
-            InputVar<double> sp4 = new InputVar<double>("SpreadProbabilityB4");
-            ReadVar(sp4);
-            parameters.SpreadProbabilityB4 = sp4.Value;
-
             InputVar<int> burningSitesThreshold = new InputVar<int>("BurningSitesThreshold");
             if (ReadOptionalVar(burningSitesThreshold))
             {
@@ -472,61 +464,11 @@ namespace Landis.Extension.SocialClimateFire
             ReadVar(lfma);
             parameters.LadderFuelMaxAge = lfma.Value;
 
-            // Appropriate below for using two species lists
-
             //  Read the species list for ladderfuels:
             List<string> speciesNames = new List<string>();
 
             const string LadderFuelSpeciesList = "LadderFuelSpeciesList";
             ReadName(LadderFuelSpeciesList);
-
-            while (!AtEndOfInput && CurrentName != "FineFuelsSpeciesAList")
-            {
-                StringReader currentLine = new StringReader(CurrentLine);
-                TextReader.SkipWhitespace(currentLine);
-                while (currentLine.Peek() != -1)
-                {
-                    ReadValue(speciesName, currentLine);
-                    string name = speciesName.Value.Actual;
-
-                    if (speciesNames.Contains(name))
-                        throw NewParseException("The species {0} appears more than once.", name);
-                    speciesNames.Add(name);
-
-                    ISpecies species = GetSpecies(new InputValue<string>(name, speciesName.Value.String));
-                    parameters.LadderFuelSpeciesList.Add(species);
-
-                    TextReader.SkipWhitespace(currentLine);
-                }
-                GetNextLine();
-            }
-
-            const string FineFuelsSpeciesAList = "FineFuelsSpeciesAList";
-            ReadName(FineFuelsSpeciesAList);
-
-            while (!AtEndOfInput && CurrentName != "FineFuelsSpeciesBList")
-            {
-                StringReader currentLine = new StringReader(CurrentLine);
-                TextReader.SkipWhitespace(currentLine);
-                while (currentLine.Peek() != -1)
-                {
-                    ReadValue(speciesName, currentLine);
-                    string name = speciesName.Value.Actual;
-
-                    if (speciesNames.Contains(name))
-                        throw NewParseException("The species {0} appears more than once.", name);
-                    speciesNames.Add(name);
-
-                    ISpecies species = GetSpecies(new InputValue<string>(name, speciesName.Value.String));
-                    parameters.FineFuelsSpeciesAList.Add(species);
-
-                    TextReader.SkipWhitespace(currentLine);
-                }
-                GetNextLine();
-            }
-
-            const string FineFuelsSpeciesBList = "FineFuelsSpeciesBList";
-            ReadName(FineFuelsSpeciesBList);
 
             while (!AtEndOfInput && CurrentName != "SuppressionMaxWindSpeed")
             {
@@ -542,7 +484,7 @@ namespace Landis.Extension.SocialClimateFire
                     speciesNames.Add(name);
 
                     ISpecies species = GetSpecies(new InputValue<string>(name, speciesName.Value.String));
-                    parameters.FineFuelsSpeciesBList.Add(species);
+                    parameters.LadderFuelSpeciesList.Add(species);
 
                     TextReader.SkipWhitespace(currentLine);
                 }
