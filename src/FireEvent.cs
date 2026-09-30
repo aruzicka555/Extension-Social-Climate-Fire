@@ -496,6 +496,9 @@ namespace Landis.Extension.SocialClimateFire
 
             double fineFuelPercent = 0.0;
             double fineFuelPercent_harvest = 1.0;
+            double grassBiomass = CalculateGrassBiomass(site);
+            double grassBiomassPercent = 0.0;
+            double grassBiomassPercent_harvest = 1.0;
             try
             {
                 fineFuelPercent = Math.Min(SiteVars.FineFuels[site] / PlugIn.Parameters.MaxFineFuels, 1.0);
@@ -503,6 +506,12 @@ namespace Landis.Extension.SocialClimateFire
                     fineFuelPercent_harvest = (System.Math.Min(1.0, (double)(PlugIn.ModelCore.CurrentTime - SiteVars.HarvestTime[site]) * 0.1));
 
                 fineFuelPercent = Math.Min(fineFuelPercent, fineFuelPercent_harvest);
+
+                grassBiomassPercent = Math.Min(grassBiomass / PlugIn.Parameters.MaxGrassBiomass, 1.0);
+                if (SiteVars.HarvestTime != null && SiteVars.HarvestTime[site] > PlugIn.ModelCore.CurrentTime)
+                    grassBiomassPercent_harvest = (System.Math.Min(1.0, (double)(PlugIn.ModelCore.CurrentTime - SiteVars.HarvestTime[site]) * 0.1));
+
+                grassBiomassPercent = Math.Min(grassBiomassPercent, grassBiomassPercent_harvest);
             }
             catch
             {
@@ -568,8 +577,9 @@ namespace Landis.Extension.SocialClimateFire
             double spreadB1 = PlugIn.Parameters.SpreadProbabilityB1;
             double spreadB2 = PlugIn.Parameters.SpreadProbabilityB2;
             double spreadB3 = PlugIn.Parameters.SpreadProbabilityB3;
+            double spreadB4 = PlugIn.Parameters.SpreadProbabilityB4;
 
-            double Pspread = Math.Pow(Math.E, -1.0 * (spreadB0 + (spreadB1 * fireWeatherIndex) + (spreadB2 * fineFuelPercent) + (spreadB3 * effectiveWindSpeed)));
+            double Pspread = Math.Pow(Math.E, -1.0 * (spreadB0 + (spreadB1 * fireWeatherIndex) + (spreadB2 * fineFuelPercent) + (spreadB4 * grassBiomassPercent) + (spreadB3 * effectiveWindSpeed)));
             Pspread = 1.0 / (1.0 + Pspread);
             
             //The distance weight accounts for the longer centroid distance between diagonal spread 
@@ -597,6 +607,24 @@ namespace Landis.Extension.SocialClimateFire
             return spread;
 
         }
+
+        private double CalculateGrassBiomass(ActiveSite site)
+        {
+            double grassBiomass = 0.0;
+            foreach (ISpeciesCohorts speciesCohorts in SiteVars.Cohorts[site])
+            {
+                foreach (ICohort cohort in speciesCohorts)
+                {
+                    if (PlugIn.Parameters.BiomassSpreadSpeciesList.Contains(cohort.Species))
+                    {
+                        grassBiomass += cohort.Data.Biomass;
+                    }
+                }
+            }
+
+            return grassBiomass;
+        }
+
         private double CalculateEffectiveWindSpeed(ActiveSite site, ActiveSite sourceSite, double fireWeatherIndex, int day)
         {
             IEcoregion ecoregion = PlugIn.ModelCore.Ecoregion[site];

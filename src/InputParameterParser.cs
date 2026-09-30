@@ -314,6 +314,10 @@ namespace Landis.Extension.SocialClimateFire
             ReadVar(maxFF);
             parameters.MaxFineFuels = maxFF.Value;
 
+            InputVar<double> maxGB = new InputVar<double>("MaximumGrassBiomass");
+            ReadVar(maxGB);
+            parameters.MaxGrassBiomass = maxGB.Value;
+
             InputVar<double> maxRxWS = new InputVar<double>("MaximumRxWindSpeed");
             ReadVar(maxRxWS);
             parameters.RxMaxWindSpeed = maxRxWS.Value;
@@ -402,6 +406,10 @@ namespace Landis.Extension.SocialClimateFire
             ReadVar(sp3);
             parameters.SpreadProbabilityB3 = sp3.Value;
 
+            InputVar<double> sp4 = new InputVar<double>("SpreadProbabilityB4");
+            ReadVar(sp4);
+            parameters.SpreadProbabilityB4 = sp4.Value;
+
             InputVar<int> burningSitesThreshold = new InputVar<int>("BurningSitesThreshold");
             if (ReadOptionalVar(burningSitesThreshold))
             {
@@ -470,7 +478,7 @@ namespace Landis.Extension.SocialClimateFire
             const string LadderFuelSpeciesList = "LadderFuelSpeciesList";
             ReadName(LadderFuelSpeciesList);
 
-            while (!AtEndOfInput && CurrentName != "SuppressionMaxWindSpeed")
+            while (!AtEndOfInput && CurrentName != "BiomassSpreadSpeciesList")
             {
                 StringReader currentLine = new StringReader(CurrentLine);
                 TextReader.SkipWhitespace(currentLine);
@@ -485,6 +493,33 @@ namespace Landis.Extension.SocialClimateFire
 
                     ISpecies species = GetSpecies(new InputValue<string>(name, speciesName.Value.String));
                     parameters.LadderFuelSpeciesList.Add(species);
+
+                    TextReader.SkipWhitespace(currentLine);
+                }
+                GetNextLine();
+            }
+
+            //  Read the species list for grass:
+            List<string> grassSpeciesNames = new List<string>();
+
+            const string BiomassSpreadSpeciesList = "BiomassSpreadSpeciesList";
+            ReadName(BiomassSpreadSpeciesList);
+
+            while (!AtEndOfInput && CurrentName != "SuppressionMaxWindSpeed")
+            {
+                StringReader currentLine = new StringReader(CurrentLine);
+                TextReader.SkipWhitespace(currentLine);
+                while (currentLine.Peek() != -1)
+                {
+                    ReadValue(speciesName, currentLine);
+                    string name = speciesName.Value.Actual;
+
+                    if (grassSpeciesNames.Contains(name))
+                        throw NewParseException("The species {0} appears more than once.", name);
+                    grassSpeciesNames.Add(name);
+
+                    ISpecies species = GetSpecies(new InputValue<string>(name, speciesName.Value.String));
+                    parameters.BiomassSpreadSpeciesList.Add(species);
 
                     TextReader.SkipWhitespace(currentLine);
                 }

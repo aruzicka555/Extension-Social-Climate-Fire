@@ -33,6 +33,7 @@ namespace Landis.Extension.SocialClimateFire
         double AccidentalFireIgnitionBinomialB0 { get; set; }
         double AccidentalFireIgnitionBinomialB1 { get; set; }
         double MaxFineFuels { get; set; }
+        double MaxGrassBiomass { get; set; }
         List<IDynamicIgnitionMap> DynamicRxIgnitionMaps { get; }
         List<IDynamicIgnitionMap> DynamicLightningIgnitionMaps { get; }
         List<IDynamicIgnitionMap> DynamicAccidentalIgnitionMaps { get; }
@@ -60,6 +61,7 @@ namespace Landis.Extension.SocialClimateFire
         double SpreadProbabilityB1 { get; set; }
         double SpreadProbabilityB2 { get; set; }
         double SpreadProbabilityB3 { get; set; }
+        double SpreadProbabilityB4 { get; set; }
 
         double SiteMortalityB0 { get; set; }
         double SiteMortalityB1 { get; set; }
@@ -77,6 +79,7 @@ namespace Landis.Extension.SocialClimateFire
         Dictionary<int, ISuppressionTable> SuppressionFWI_Table { get; }
         List<ISpecies> LadderFuelSpeciesList { get; }
         List<IDeadWood> StandingDeadWoodList { get; }
+        List<ISpecies> BiomassSpreadSpeciesList {  get; }
 
         double TimeZeroPET { get; set; }
         double TimeZeroCWD { get; set; }
@@ -120,6 +123,7 @@ namespace Landis.Extension.SocialClimateFire
         private double accidentalFireIgnitionBinomialB0;
         private double accidentalFireIgnitionBinomialB1;
         private double maxFineFuels;
+        private double maxGrassBiomass;
 
         private double maxRxWindSpeed;
         private double maxRxFireWeatherIndex;
@@ -143,6 +147,7 @@ namespace Landis.Extension.SocialClimateFire
         private double spreadProbabilityB1;
         private double spreadProbabilityB2;
         private double spreadProbabilityB3;
+        private double spreadProbabilityB4;
 
         private double siteMortalityB0;
         private double siteMortalityB1;
@@ -161,6 +166,7 @@ namespace Landis.Extension.SocialClimateFire
         private int suppressionMaxWindSpeed;
         private Dictionary<int, ISuppressionTable> suppressionFWI_Table;
         private List<ISpecies> ladderFuelSpeciesList;
+        private List<ISpecies> biomassSpreadSpeciesList;
         private List<IDeadWood> deadWoodList;
 
         private double timeZeroPET;
@@ -203,6 +209,15 @@ namespace Landis.Extension.SocialClimateFire
             get
             {
                 return ladderFuelSpeciesList;
+            }
+        }
+
+        //---------------------------------------------------------------------
+        public List<ISpecies> BiomassSpreadSpeciesList
+        {
+            get
+            {
+                return biomassSpreadSpeciesList;
             }
         }
 
@@ -442,6 +457,18 @@ namespace Landis.Extension.SocialClimateFire
             }
         }
         //---------------------------------------------------------------------
+        public double MaxGrassBiomass
+        {
+            get
+            {
+                return maxGrassBiomass;
+            }
+            set
+            {
+                maxGrassBiomass = value;
+            }
+        }
+        //---------------------------------------------------------------------
         public double RxMaxWindSpeed
         {
             get
@@ -668,6 +695,18 @@ namespace Landis.Extension.SocialClimateFire
             set
             {
                 spreadProbabilityB3 = value;
+            }
+        }
+        //---------------------------------------------------------------------
+        public double SpreadProbabilityB4
+        {
+            get
+            {
+                return spreadProbabilityB4;
+            }
+            set
+            {
+                spreadProbabilityB4 = value;
             }
         }
         //---------------------------------------------------------------------
