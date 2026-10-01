@@ -886,6 +886,7 @@ namespace Landis.Extension.SocialClimateFire
             this.speciesDataset = speciesDataset;
 
             ladderFuelSpeciesList = new List<ISpecies>();
+            biomassSpreadSpeciesList = new List<ISpecies>();
             deadWoodList = new List<IDeadWood>();
             suppressionFWI_Table = new Dictionary<int, ISuppressionTable>();
             dynamicRxIgnitions = new List<IDynamicIgnitionMap>();
